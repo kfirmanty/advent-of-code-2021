@@ -79,14 +79,23 @@ cdfeb fcadb cdfeb cdbaf"))
                      (and (set? segments) (#{1 2} (count segments)))))
            empty?)))
 
+(defn with-lowest-guess-needed [possible]
+  (let [lowest-guess (->> possible
+                          (filter (fn [[wire segments]]
+                                    (set? segments)))
+                          (map (comp count second))
+                          sort
+                          first)]
+    (->> possible
+         (filter (fn [[wire segments]]
+                   (and (set? segments) (= (count segments) lowest-guess)))))))
+
 (defn guess [possible]
   (let [possible (substitute-clear-ones possible)]
     (cond
       (solved? possible) possible
       (failed-state? possible) nil
-      :else (let [guesses (->> possible
-                               (filter (fn [[wire segments]]
-                                         (and (set? segments) (= (count segments) 2)))))]
+      :else (let [guesses (with-lowest-guess-needed possible)]
               (for [g guesses]
                 (let [[wire segments] g]
                   (map
